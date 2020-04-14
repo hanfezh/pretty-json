@@ -28,3 +28,5 @@ def DoPrettyJson():
 DoPrettyJson()
 EOF
 endfunction
+
+nnoremap <C-j> :call PrettyJson()<CR>
