@@ -3,13 +3,21 @@
 " Maintainer:  hanfezh <xianfeng.zhu@gmail.com>
 " License: This file is placed in the public domain.
 
-if exists("g:loaded_pretty_json")
+if exists("g:pretty_json_loaded")
     finish
 endif
 
-let g:loaded_pretty_json = 1
+let g:pretty_json_loaded = 1
 
-py << EOF
+if has('python')
+    set pyx=2
+elseif has('python3')
+    set pyx=3
+else
+    finish
+endif
+
+pyx << EOF
 import json
 import vim
 
@@ -34,11 +42,11 @@ def do_pretty_json(selected=False):
 EOF
 
 function! PrettyAllJson()
-    py do_pretty_json(False)
+    pyx do_pretty_json(False)
 endfunction
 
 function! PrettySelJson()
-    py do_pretty_json(True)
+    pyx do_pretty_json(True)
 endfunction
 
 nnoremap <C-j> :call PrettyAllJson()<CR>
