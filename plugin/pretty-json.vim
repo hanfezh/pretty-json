@@ -21,13 +21,10 @@ pyx << EOF
 import json
 import vim
 
-def do_pretty_json(selected=False):
-    if not selected:
-        json_body = '\n'.join(vim.current.buffer).strip()
-    else:
-        vim.command('normal gv"xy')
-        json_body = vim.eval('@x').strip()
+def pretty_current_buffer():
+    json_body = '\n'.join(vim.current.buffer).strip()
     if len(json_body) == 0:
+        # Current buffer is empty
         return
     try:
         json_obj = json.loads(json_body)
@@ -35,19 +32,46 @@ def do_pretty_json(selected=False):
         vim.command('echo "Can not decode invalid json text to object."')
         return
     pretty_body = json.dumps(json_obj, sort_keys=False, indent=4)
-    if not selected:
-        vim.current.buffer[:] = pretty_body.split('\n')
-    else:
-        vim.command('normal gvs%s' % (pretty_body))
+    vim.current.buffer[:] = pretty_body.split('\n')
+
+def pretty_selected_text():
+    _, start_row, start_col, _ = vim.eval('getpos("\'<")')
+    _, end_row, end_col, _ = vim.eval('getpos("\'>")')
+    start_row, start_col = int(start_row), int(start_col)
+    end_row, end_col = int(end_row), int(end_col)
+    lines = vim.eval('getline(%d, %d)' % (start_row, end_row))
+    if len(lines) == 0:
+        # Current selection is empty
+        return
+
+    end_col -= 0 if vim.eval('&selection') == 'inclusive' else 1
+    lines[0] = lines[0][start_col - 1:]
+    lines[-1] = lines[-1][:end_col]
+    json_body = '\n'.join(lines)
+
+    try:
+        json_obj = json.loads(json_body)
+    except ValueError:
+        vim.command('echo "Can not decode invalid json text to object."')
+        return
+    pretty_body = json.dumps(json_obj, sort_keys=False, indent=4)
+    pretty_lines = pretty_body.split('\n')
+
+    # Replace selection with pretty json
+    start_line = vim.current.buffer[start_row - 1]
+    end_line = vim.current.buffer[end_row - 1]
+    pretty_lines[0] = start_line[:start_col - 1] + pretty_lines[0]
+    pretty_lines[-1] += end_line[end_col:]
+    vim.current.buffer[start_row - 1: end_row] = pretty_lines
 EOF
 
 function! PrettyAllJson()
-    pyx do_pretty_json(False)
+    pyx pretty_current_buffer()
 endfunction
 
 function! PrettySelJson()
-    pyx do_pretty_json(True)
+    pyx pretty_selected_text()
 endfunction
 
 nnoremap <C-j> :call PrettyAllJson()<CR>
-vnoremap <C-j> :call PrettySelJson()<CR>
+vnoremap <C-j> :<c-u>call PrettySelJson()<CR>
