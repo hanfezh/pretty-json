@@ -1,23 +1,3 @@
-" Vim global plugin for prettying json
-" Last Change: 2020 Apr 12
-" Maintainer:  hanfezh <xianfeng.zhu@gmail.com>
-" License: This file is placed in the public domain.
-
-if exists("g:pretty_json_loaded")
-    finish
-endif
-
-let g:pretty_json_loaded = 1
-
-if has('python')
-    set pyx=2
-elseif has('python3')
-    set pyx=3
-else
-    finish
-endif
-
-pyx << EOF
 import json
 import vim
 
@@ -63,15 +43,3 @@ def pretty_selected_text():
     pretty_lines[0] = start_line[:start_col - 1] + pretty_lines[0]
     pretty_lines[-1] += end_line[end_col:]
     vim.current.buffer[start_row - 1: end_row] = pretty_lines
-EOF
-
-function! PrettyAllJson()
-    pyx pretty_current_buffer()
-endfunction
-
-function! PrettySelJson()
-    pyx pretty_selected_text()
-endfunction
-
-nnoremap <C-j> :call PrettyAllJson()<CR>
-vnoremap <C-j> :<c-u>call PrettySelJson()<CR>
