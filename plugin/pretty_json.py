@@ -15,18 +15,15 @@ def pretty_current_buffer():
     vim.current.buffer[:] = pretty_body.split('\n')
 
 def pretty_selected_text():
-    _, start_row, start_col, _ = vim.eval('getpos("\'<")')
-    _, end_row, end_col, _ = vim.eval('getpos("\'>")')
-    start_row, start_col = int(start_row), int(start_col)
-    end_row, end_col = int(end_row), int(end_col)
+    start_row, start_col = vim.current.buffer.mark('<')
+    end_row, end_col = vim.current.buffer.mark('>')
     lines = vim.eval('getline(%d, %d)' % (start_row, end_row))
     if len(lines) == 0:
         # Current selection is empty
         return
 
-    end_col -= 0 if vim.eval('&selection') == 'inclusive' else 1
-    lines[0] = lines[0][start_col - 1:]
-    lines[-1] = lines[-1][:end_col]
+    lines[0] = lines[0][start_col:]
+    lines[-1] = lines[-1][:end_col + 1]
     json_body = '\n'.join(lines)
 
     try:
@@ -40,6 +37,6 @@ def pretty_selected_text():
     # Replace selection with pretty json
     start_line = vim.current.buffer[start_row - 1]
     end_line = vim.current.buffer[end_row - 1]
-    pretty_lines[0] = start_line[:start_col - 1] + pretty_lines[0]
-    pretty_lines[-1] += end_line[end_col:]
+    pretty_lines[0] = start_line[:start_col] + pretty_lines[0]
+    pretty_lines[-1] += end_line[end_col + 1:]
     vim.current.buffer[start_row - 1: end_row] = pretty_lines
