@@ -22,8 +22,8 @@ def pretty_selected_text():
         # Current selection is empty
         return
 
-    lines[0] = lines[0][start_col:]
     lines[-1] = lines[-1][:end_col + 1]
+    lines[0] = lines[0][start_col:]
     json_body = '\n'.join(lines)
 
     try:
